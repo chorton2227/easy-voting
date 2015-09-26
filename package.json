@@ -1,0 +1,19 @@
+{
+  "title": "Easy Voting",
+  "name": "easy-voting",
+  "version": "0.0.1",
+  "description": "Reminds you to vote for private servers and get mad loots.",
+  "main": "index.js",
+  "author": "Chris Horton <chorton2227@gmail.com>",
+  "engines": {
+    "firefox": ">=38.0a1",
+    "fennec": ">=38.0a1"
+  },
+  "license": "MIT",
+  "preferences": [{
+    "name": "accountName",
+    "title": "Your account name",
+    "type": "string",
+    "value": "Enter your account name"
+  }]
+}
