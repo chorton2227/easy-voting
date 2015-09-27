@@ -1,8 +1,20 @@
 // Require dependencies
-var buttons = require('sdk/ui/button/action');
-var simple_prefs = require('sdk/simple-prefs');
-var tabs = require('sdk/tabs');
-var self = require('sdk/self');
+var notifications   = require('sdk/notifications');
+var self            = require('sdk/self');
+var simple_prefs    = require('sdk/simple-prefs');
+var simple_storage  = require('sdk/simple-storage');
+var tabs            = require('sdk/tabs');
+var { setInterval } = require('sdk/timers');
+var buttons         = require('sdk/ui/button/action');
+
+// Setup variables in add-on scope
+if (typeof simple_storage.storage.last_vote_date === "undefined") {
+	simple_storage.storage.last_vote_date = new Date(-8640000000000000);
+}
+
+if (typeof simple_storage.storage.last_notification_date === "undefined") {
+	simple_storage.storage.last_notification_date = new Date(-8640000000000000);
+}
 
 // Setup vote now button
 var button = buttons.ActionButton({
@@ -40,6 +52,9 @@ var button = buttons.ActionButton({
 						}
 					});
 
+					// Update the last vote date
+					simple_storage.storage.last_vote_date = new Date();
+
 					// The script has been run, set variable to true
 					hasRun = true;
 				}
@@ -47,3 +62,51 @@ var button = buttons.ActionButton({
 		});
 	}
 });
+
+// Setup timer, check if it is time to vote every minute
+setInterval(function() {
+	// If you can NOT vote, stop here
+	if (!canVote()) {
+		return;
+	}
+
+	// If you can NOT notify, stop here
+	if (!canNotify()) {
+		return;
+	}
+
+	// Notify the user that they can now vote
+	notifications.notify({
+		title: 'Vote Now',
+		text: 'You can vote again!'
+	});
+
+	// Update the last notification date
+	simple_storage.storage.last_notification_date = new Date();
+}, 10000);
+
+// Check if the user can vote
+function canVote() {
+	var now = new Date();
+	var last_vote_date_time_diff = Math.abs(now.getTime() - simple_storage.storage.last_vote_date.getTime());
+	var last_vote_date_time_diff_hours = Math.ceil(last_vote_date_time_diff / (1000 * 3600));
+
+	if (last_vote_date_time_diff_hours >= 6) {
+		return true;
+	}
+
+	return false;
+}
+
+// Check if you can notify the user
+function canNotify() {
+	var now = new Date();
+	var last_notification_date_time_diff = Math.abs(now.getTime() - simple_storage.storage.last_notification_date.getTime());
+	var last_notification_date_time_diff_minutes = Math.ceil(last_notification_date_time_diff / (1000 * 60));
+
+	if (last_notification_date_time_diff_minutes > 1) {
+		return true;
+	}
+
+	return false;
+}
